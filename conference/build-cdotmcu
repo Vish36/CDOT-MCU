@@ -603,10 +603,10 @@ fi
 . "$SELF_DIR/custom/locales/$LNG.lng"
 
 # ============================================
-if ! [ "$(whoami)" = "root" ] ; then
-  echo "$LNG_MSG_ROOT_NEED"
-  exit 1
-fi
+#if ! [ "$(whoami)" = "root" ] ; then
+#  echo "$LNG_MSG_ROOT_NEED"
+#  exit 1
+#fi
 
 # ini-файл
 SCRIPT_DEFAULTS="$SELF_DIR/$SELF_NAME.ini"
