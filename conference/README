@@ -1,0 +1,24 @@
+
+
+
+directory structure  of current directory
+
+custom  dependencies  libyuv  openmcu-oci  openmcu-oci.ini  openmcu-ru  README  src
+
+
+
+It is expected you please make changes(if required) in "./openmcu-ru/*" and copy "./openmcu" in "./src" directory.
+Since at compilation time ./src/* gets copied to ./build/ so
+changes in ./openmcu-ru/*' will not be reflected untill you copy ./openmcu-ru to ./src directory
+
+
+
+
+
+Making it from openmcu-ru to CDOT-MCU
+It required changes in following files
+./openmcu-oci
+./src/openmcu-ru/openmcu/configure
+./src/openmcu-ru/openmcu/configure.ac
+./src/openmcu-ru/openmcu/Makefile.in
+./src/openmcu-ru/openmcu/autom4te.cache/*  Please empty this directory

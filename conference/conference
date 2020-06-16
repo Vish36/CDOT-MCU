@@ -1,0 +1,194 @@
+#!/bin/bash
+USER=root
+PNAME=cdot-mcu
+MULTI=
+PROCC=cdot-mcu$MULTI
+monitScr=cdotmcu_monit.sh
+BIN_PATH=/opt/CDOT-MCU$MULTI/bin
+CONF_PATH=/opt/CDOT-MCU$MULTI/config/openmcu-ru.ini
+CONF_FILE_DIR=/opt/CDOT-MCU$MULTI/config
+#MATE_IP=`awk '{if($1~/mateip/)print $3}' ${CONF_FILE_DIR}/ngms_sys.conf`
+#GW_IP=`awk '{if($1~/gwip/)print $3}' ${CONF_FILE_DIR}/ngms_sys.conf`
+#FLOAT_IP=`awk '{if($1~/floatip/)print $3}' ${CONF_FILE_DIR}/ngms_sys.conf`
+#COPY_ID=`awk '{if($1~/copy/)print $3}' ${CONF_FILE_DIR}/ngms_sys.conf`
+
+PROC_PID=`ps -e -o pid,args |awk '{print $1" "$2 }'|grep -w "$PROCC"  |awk '{ print $1} '`
+
+status()
+{
+PROC_PID=`ps -e -o pid,args |awk '{print $1" "$2 }'|grep -w "$PROCC"  |awk '{ print $1} '`
+
+         PROC=`ps -e -o comm,pid           | grep -w $PROC_PID | awk '{print $1}'`
+         OWNER=`ps -e -o user,pid          | grep -w $PROC_PID | awk '{print $1}'`
+         MEM_SIZE=`ps -e -o vsz,pid        | grep -w $PROC_PID | awk '{print $1}'`
+         MEM_PCNTG=`ps -e -o pmem,pid      | grep -w $PROC_PID | awk '{print $1}'`
+         RUN_TIME=`ps -e -o etime,pid      | grep -w $PROC_PID | awk '{print $1}'`
+         START_TIME=`ps -e -o stime,pid    | grep -w $PROC_PID | awk '{print $1}'`
+         PCNTG_CPU_TIME=`ps -e -o pcpu,pid | grep -w $PROC_PID | awk '{print $1}'`
+
+        echo " ====================================================="
+        echo "           CDOT Conference Server                          "
+        echo " ====================================================="
+        echo"" 
+        echo "     % of CPU Time                : $PCNTG_CPU_TIME"
+        echo "     Running as                   : $OWNER         "
+        echo "     PID                          : $PROC_PID       "
+        echo "     % of Memory                  : $MEM_PCNTG     "
+        echo "     Start Time                   : $START_TIME    "
+        echo "     Time Running                 : $RUN_TIME      "
+        echo "     % of CPU Time                : $PCNTG_CPU_TIME"
+        echo " ====================================================="
+
+}
+
+kill_msmonit()
+{
+PROCC_PID=`ps -e -o pid,args |awk '{print $1" "$3 }'|grep -w cdotmcu_monit.sh |awk '{ print $1} '`
+kill -9 $PROCC_PID 
+}
+
+init()
+{
+echo "Do you want to configure IP ADDRESS of system"
+echo "Enter [y/n]"
+x="n"
+timeout=10
+update=0
+read -t $timeout  x
+if [ $? -eq 0 ];then
+        case $x in
+        y|Y)    
+                update=1
+		
+                #echo "Press ENTER for no change"
+                #echo "Enter self eth0 IP address: "
+                #read  selfeth0
+                #echo "Enter Gateway IP address: "
+                #read gwip
+                #echo "Enter Floating IP address: "
+                #read floatip
+                #echo "Enter Secondary copy IP address: "
+                #read mateip
+                echo "Enter softswitch IP address: "
+                read swip
+                #echo "Enter Port no: for CDOT-MCU "
+                #read port
+		#echo "Enter NGEMS Server IP(Trap receiver): "
+		#read trap_receiver_ip
+		#echo "Enter Shelf Manager IP"
+		#read shelf_manager_ip
+        ;;
+        n|N) 
+                update=0
+        ;;
+        *) 
+                update=0 
+        ;;
+        esac
+fi
+
+if [ $update -eq 1 ];then
+
+: << 'END'
+        echo "Configuring IP ADDRESS of MS"
+        awk -f ${CONF_FILE_DIR}/ngms_conf.awk Copy=$id IPself0=$selfeth0 IPgw=$gwip IPfloat=$floatip IPmate=$mateip IPsoft=$swip bindport=$port ${CONF_FILE_DIR}/ngms_sys.conf >temp.conf
+        mv -f ${CONF_FILE_DIR}/ngms_sys.conf ${CONF_FILE_DIR}/ngms_sys.conf.old
+        mv -f temp.conf ${CONF_FILE_DIR}/ngms_sys.conf
+	# make changes in ${CONF_FILE_DIR}/snmp/snmpd.conf file
+	if [ ${trap_receiver_ip} != "" ];then
+		sed -i "/trap2sink/d" ${CONF_FILE_DIR}/snmp/snmpd.conf
+		echo "trap2sink ${trap_receiver_ip} Conferencemediaserver" >> ${CONF_FILE_DIR}/snmp/snmpd.conf
+	fi
+	if [ ${shelf_manager_ip} != "" ];then
+		sed -i "/shelfManagerIP/d" ${CONF_FILE_DIR}/snmp/variable_ngndiscovery.info.tmp
+		echo "shelfManagerIP=$shelf_manager_ip" >> ${CONF_FILE_DIR}/snmp/variable_ngndiscovery.info.tmp
+	fi
+	${CONF_FILE_DIR}/ngms_cp.awk
+END
+	echo "Softswitch IP $swip"
+fi
+
+#$BIN_PATH/ngms start
+}
+
+case "$1" in
+	'start')
+		
+#		if [ ! -f /opt/CDOT-ngms/etc/sip.conf ]; then	
+#			echo "Please execute \"./ngms init\" for intialization"
+#			exit 2	
+#		fi
+		
+		#MATE_IP=`awk '{if($1~/mateip/)print $3}' ${CONF_FILE_DIR}/ngms_sys.conf`
+		#GW_IP=`awk '{if($1~/gwip/)print $3}' ${CONF_FILE_DIR}/ngms_sys.conf`
+		#FLOAT_IP=`awk '{if($1~/floatip/)print $3}' ${CONF_FILE_DIR}/ngms_sys.conf`
+		#COPY_ID=`awk '{if($1~/copy/)print $3}' ${CONF_FILE_DIR}/ngms_sys.conf`
+		
+		if [  "$PROC_PID" ]; then
+        	   echo "CDOT-MCU already running Please reconnect"
+		else        
+          	   echo "CDOT-MCU STARTING..........."
+	           cd $BIN_PATH
+	           ulimit -c unlimited 
+                   $BIN_PATH/$PROCC -x &
+		   
+		   ret=$?
+		   if [ $ret -eq 0 ] ;then
+			sleep 3 
+			#echo "Before monitor" 
+                   	$BIN_PATH/$monitScr &
+			#echo "after monitor"
+			sleep 5 
+	           fi			
+		# for starting duplex process
+		 # $BIN_PATH/ngms_duplex.exe $MATE_IP $FLOAT_IP $GW_IP $COPY_ID &> /dev/null &
+		fi
+		
+	;;
+
+	'status')
+
+		if [ -z "$PROC_PID" ]; then
+            	  echo "CDOT-MCU is currently not running."
+       		else
+            	  sleep 1
+	          cd $BIN_PATH
+	          status
+	 	fi    	                                                                                                                            
+	;;
+	'stop')
+
+	if [ -z "$PROC_PID" ]; then
+            echo "CDOT-MCU is currently not running."
+                                                                                                                            
+        else
+            # Stop the NGMS SWITCH by sending a 9 signal 
+            kill_msmonit 
+	  # setting floating IP down
+	    
+	#ifconfig eth0:1 $FLOAT_IP down
+            kill -9 $PROC_PID
+            sleep 1
+            STILL_ALIVE=`ps -u "$USER" -o pid | grep -w $PROC_PID`
+            while [ -n "$STILL_ALIVE" ]; do
+                sleep 1
+                STILL_ALIVE=`ps -u "$USER" -o pid | grep -w $PROC_PID`
+            done
+            echo "CDOT-MCU shutdown."
+                                                                                                                            
+        fi
+        ;;
+
+#	'init')
+#		init
+#	;; 
+        *)
+#        msg="Usage: start.sh { init | start | stop | status }"
+        msg="Usage: start.sh {start | stop | status }"
+        echo  "$msg" 
+    ;;
+
+
+esac
+
+

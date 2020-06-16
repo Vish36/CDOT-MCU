@@ -1,0 +1,21 @@
+#! /bin/sh
+
+. /lib/lsb/init-functions
+set -e
+case "$1" in
+  start)
+        /opt/CDOT-MCU/bin/conference start
+        ;;
+  stop)
+        /opt/CDOT-MCU/bin/conference stop
+        ;;
+  status)
+        /opt/CDOT-MCU/bin/conference status
+        ;;
+  *)
+	echo "Usage: service mcu  {start | stop | status }"
+ 
+        ;;
+esac
+exit 0
+
