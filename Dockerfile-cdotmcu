@@ -1,3 +1,5 @@
 FROM ubuntu:14.04
-COPY main.c /opt
-CMD ["ping google.com"]
+COPY ./conference/CDOT-MCU.tar /src/
+RUN apt-get install tar && tar -C /src/ -xvf /src/CDOT-MCU.tar && cd /src/ && ./cdotmcu_install.sh && rm -rf /src/*
+
+CMD ["Hello vish kindly check the /opt/CDOT-MCU for proper installation"]
