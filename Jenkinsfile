@@ -8,18 +8,23 @@ pipeline {
             {
                 retry(3)
                 {
-                    git credentialsId: '369ceaa2-ee83-481c-96e4-f47511dcc234', url: 'https://github.com/Vish36/jenkins-stash.git'
+                    git credentialsId: '369ceaa2-ee83-481c-96e4-f47511dcc234', url: 'https://github.com/Vish36/CDOT-MCU.git'
+                    //git credentialsId: '369ceaa2-ee83-481c-96e4-f47511dcc234', url: 'https://github.com/Vish36/jenkins-stash.git'
                 }
             }
         }
         stage('env-preparation')
         {
-             script
+            steps
+            {
+                script
                 {
                     
                     docker.build("compilationenv:14.04","-f Dockerfile-comp_env .")
 
                 }
+            }
+             
         }
         stage('build') {
             agent {
@@ -30,8 +35,13 @@ pipeline {
             
             }
             steps {
+                retry(3)
+                {
+                    git credentialsId: '369ceaa2-ee83-481c-96e4-f47511dcc234', url: 'https://github.com/Vish36/CDOT-MCU.git'
+                    //git credentialsId: '369ceaa2-ee83-481c-96e4-f47511dcc234', url: 'https://github.com/Vish36/jenkins-stash.git'
+                }
                 
-                /*sh 'tar -xvf ./conference/dependencies/nasm-2.13.01.tar.xz'
+                sh 'tar -xvf ./conference/dependencies/nasm-2.13.01.tar.xz'
                 sh '''cd nasm-2.13.01/
                         ./configure
                         make
@@ -39,12 +49,12 @@ pipeline {
                     '''
                 sh './conference/build-cdotmcu'
                 sh 'tar -xvf '
-                */
+                
 
-                echo "In compenv: Assume build is done"
-                sh 'ls -lrt '
+                //echo "In compenv: Assume build is done"
+                //sh 'ls -lrt '
               
-               stash includes: 'main.c' , name: 'mainFile'
+               stash includes: 'conference/CDOT-MCU.tar' , name: 'CDOT-MCU_del'
                
                
             }
@@ -57,7 +67,7 @@ pipeline {
             {
                 dir('Target')
                 {
-                    unstash 'mainFile'
+                    unstash 'CDOT-MCU_del'
                 }
                 
                 script
