@@ -20,7 +20,7 @@ pipeline {
                 script
                 {
                     
-                    docker.build("compilationenv:14.04","-f Dockerfile-comp_env .") //need docker registry currently using local docker ecosystem
+                    docker.build("compilationenv:14.04","-f Dockerfile-comp_env .")
 
                 }
             }
@@ -54,9 +54,6 @@ pipeline {
                 '''
                 
 
-                //echo "In compenv: Assume build is done"
-                //sh 'ls -lrt '
-              
                stash includes: 'conference/CDOT-MCU.tar' , name: 'CDOT-MCU_del'
                
                
@@ -68,10 +65,11 @@ pipeline {
            
             steps
             {
-                dir('Target')
+                dir('TARGET')
                 {
                     unstash 'CDOT-MCU_del'
                 }
+               // sh 'docker build -t cdotmcu:1.0 -f Dockerfile-cdotmcu .'
                 script
                 {
                     
@@ -85,7 +83,7 @@ pipeline {
         {
             steps
             {
-                sh 'docker run -d cdotmcu:1.0'
+                sh 'docker run -p 5060:5060 -p 1420:1420 -p 5061:5061 -d cdotmcu:1.0'
             }
         }
     }
