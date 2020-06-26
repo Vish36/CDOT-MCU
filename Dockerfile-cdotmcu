@@ -1,5 +1,5 @@
 FROM ubuntu:14.04
 COPY TARGET/* /src/
-RUN apt-get install tar && tar -C /src/ -xvf /src/CDOT-MCU.tar && cd /src/ && ./cdotmcu_install.sh && rm -rf /src/*
+RUN apt-get install tar && tar -C /src/ -xvf /src/CDOT-MCU.tar && cd /src/CDOT-MCU && ./cdotmcu_install.sh && rm -rf /src/*
 
 CMD ["Hello vish kindly check the /opt/CDOT-MCU for proper installation"]
